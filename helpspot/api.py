@@ -53,18 +53,11 @@ _POST_METHODS = [
 
 class HelpSpotHandler(urllib2.BaseHandler):
     """
-    Custom urllib2 opener that treats HTTP status code 400
-    as normal. HelpSpot uses code 400 for method call errors.
+    urllib2 opener that treats HTTP status code 400
+    as normal. HelpSpot uses code 400 for API errors.
     """
     def http_error_400(self, req, fp, code, msg, hdrs):
         return fp
-
-class HelpSpotError(Exception):
-    """Exception raised for HelpSpot API Exceptions"""
-    def __init__(self, method):
-        self.method = method
-    def __str__(self):
-        return str(self.method)
 
 class HelpSpotAPI:
     def __init__(self, method, user, password, uri):

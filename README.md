@@ -18,5 +18,5 @@ Author
 ------
 
 John P. Speno
-http://macspeno.com/jps/
+[http://macspeno.com/jps/](http://macspeno.com/jps/)
 speno@macspeno.com

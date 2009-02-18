@@ -9,11 +9,35 @@ Copyright 2009
 
 Inspired by Python Twitter Tools
 http://mike.verdone.ca/twitter/
+
+Usage:
+
+Create a HelpSpot object then call methods on it. Any method you call on
+the object will be translated into the corresponding HelpSpot Web Services
+API call. For methods with a literal dot ('.') in them, replace the dot
+with an underscore in Python. Pass arguments to the remote side as keyword
+style arguments from Python.
+
+import helpspot
+
+user = 'you@example.com'
+pazz = 'idontknow'
+path = 'http://helpdesk.example.com/help'
+
+hs = helpspot.HelpSpot(user, pazz, path)
+
+print hs.version()
+print hs.private_version()
+
+hs.private_request_update(xRequest='12345', Custom28='90210')
 """
 
 import urllib2
 from urllib import urlencode
-import json
+try:
+    import json
+except ImportError:
+    import simplejson as json
 
 _POST_METHODS = [
     'request.create',
@@ -24,7 +48,6 @@ _POST_METHODS = [
     'private.request.update',
     'private.request.addTimeEvent',
     'private.request.deleteTimeEvent',
-    'private.request.merge',
     'private.request.merge',
 ]
 
@@ -66,7 +89,8 @@ class HelpSpotAPI:
         except urllib2.HTTPError, e:
             # No such method
             if 400 == e.code:
-                raise HelpSpotError(self.method)
+                s = "No such method: %s" % self.method
+                raise HelpSpotError(s)
         # XXX Detect errors when API not enabled
         # XXX Detect other errors
         return json.loads(r.read())
@@ -90,11 +114,16 @@ def main():
     uri = sys.argv[3]
     hs = HelpSpot(user=user, password=password, uri=uri)
 
-    print hs.private_version()
+    ver1 = hs.version()
+    ver2 = hs.private_version()
+    assert ver1 == ver2
+
     try:
-        print hs.nomethod()
+        print hs.move_along()
     except HelpSpotError, e:
         print e
+
+    print hs.private_request_update(xRequest='20466', Custom28='Foobar')
 
 if __name__ == '__main__':
     import sys

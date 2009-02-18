@@ -51,6 +51,13 @@ _POST_METHODS = [
     'private.request.merge',
 ]
 
+class HelpSpotHandler(urllib2.BaseHandler):
+    """Custom urllib2 opener that treats HTTP status code 400
+    as normal. HelpSpot uses code 400 for method call errors.
+    """
+    def http_error_400(self, req, fp, code, msg, hdrs):
+        return fp
+
 class HelpSpotError(Exception):
     """Exception raised for HelpSpot API Exceptions"""
     def __init__(self, method):
@@ -84,23 +91,18 @@ class HelpSpotAPI:
         req = urllib2.Request(uri)
         if self.method.startswith('private.'):
             req.add_header("Authorization", "Basic %s" % self.authz) 
-        try:
-            r = urllib2.urlopen(req, data)
-        except urllib2.HTTPError, e:
-            # No such method
-            if 400 == e.code:
-                s = "No such method: %s" % self.method
-                raise HelpSpotError(s)
+        r = urllib2.urlopen(req, data)
         # XXX Detect errors when API not enabled
         # XXX Detect other errors
         return json.loads(r.read())
-        
 
 class HelpSpot:
     def __init__(self, uri, user, password):
         self.uri = uri
         self.user = user
         self.password = password
+        opener = urllib2.build_opener(HelpSpotHandler())
+        urllib2.install_opener(opener)
 
     def __getattr__(self, key):
         try:
@@ -115,16 +117,20 @@ def main():
     hs = HelpSpot(user=user, password=password, uri=uri)
 
     ver1 = hs.version()
+    print "version returned", ver1
     ver2 = hs.private_version()
+    print "private.version returned", ver2
     assert ver1 == ver2
 
-    try:
-        print hs.move_along()
-    except HelpSpotError, e:
-        print e
+    err1 = hs.move_along()
+    print "unknown method move.along returned", err1
 
-    print hs.private_request_update(xRequest='20466', Custom28='Foobar')
+    err2 = hs.private_request_update(xRequest='466', Custom28='Foobar')
+    print "bad request ID update returned", err2
 
+    good = hs.private_request_update(xRequest=20466, Custom28='Python')
+
+    print good['xRequest'], "was updated just fine"
 if __name__ == '__main__':
     import sys
     sys.exit(main())

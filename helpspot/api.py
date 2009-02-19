@@ -24,7 +24,7 @@ user = 'you@example.com'
 pazz = 'idontknow'
 path = 'http://helpdesk.example.com/help'
 
-hs = helpspot.HelpSpot(user, pazz, path)
+hs = helpspot.HelpSpot(path, user, pazz)
 
 print hs.version()
 print hs.private_version()

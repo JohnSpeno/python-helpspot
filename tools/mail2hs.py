@@ -1,4 +1,25 @@
 #!/usr/bin/python
+"""
+A procmail filter script to add HelpSpot request ids to messages based on
+the sender.
+
+In your .procmailrc, you'd use a recipe like this:
+
+# .procmailrc
+    # Let messages with a HelpSpot tag through to the mailbox
+    :0
+    * ^Subject:.*\{[0-9]+\}.*
+    $DEFAULT
+
+    # Check other messages for possible HS inclusion
+    :0 fw
+    | /path/to/mail2hs.py
+
+    # and recheck for HelpSpot subject tags
+    :0
+    * ^Subject:.*\{[0-9]+\}.*
+    $DEFAULT
+"""
 
 import sys
 import email
@@ -16,6 +37,7 @@ SELECT xRequest, fOpen from HS_Request where sEmail like %s
 
 def get_hsid(sender, subject):
     """
+    Try to find a HelpSpot request id for given sender and/or subject
 
     sender - The email address of the sender.
     subject - The subject of the mail. Not used.
@@ -28,8 +50,6 @@ def get_hsid(sender, subject):
     open, then use the request id of that one.
 
     Otherwise, return None.
-
-
     """
 
     conn = db.Connection(user=cDBUSERNAME, passwd=cDBPASSWORD, db=cDBNAME)

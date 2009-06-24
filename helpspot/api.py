@@ -83,8 +83,11 @@ class HelpSpotAPI:
             data = params
         uri = '%s&output=json' % uri
         req = urllib2.Request(uri)
+        # Older Python versions may want to uncomment the following line
+        # to prevent the server from keeping the connection open.
+        #req.add_header('Connection', 'close')
         if self.method.startswith('private.'):
-            req.add_header("Authorization", "Basic %s" % self.authz) 
+            req.add_header('Authorization', 'Basic %s' % self.authz) 
         r = urllib2.urlopen(req, data)
         # XXX Detect errors when API not enabled
         # XXX Detect other errors
@@ -122,7 +125,7 @@ def main():
     err2 = hs.private_request_update(xRequest='466', Custom28='Foobar')
     print "bad request ID update returned", err2
 
-    good = hs.private_request_update(xRequest=20466, Custom28='Python')
+    good = hs.private_request_update(xRequest='20466', Custom28='Python')
 
     print good['xRequest'], "was updated just fine"
 if __name__ == '__main__':

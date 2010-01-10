@@ -51,7 +51,7 @@ _POST_METHODS = [
     'private.request.merge',
 ]
 
-class HelpSpotHandler(urllib2.BaseHandler):
+class HelpSpotHandler(urllib2.HTTPHandler):
     """
     urllib2 opener that treats HTTP status code 400
     as normal. HelpSpot uses code 400 for API errors.
@@ -94,11 +94,11 @@ class HelpSpotAPI:
         return json.loads(r.read())
 
 class HelpSpot:
-    def __init__(self, uri, user, password):
+    def __init__(self, uri, user, password, debuglevel=0):
         self.uri = uri
         self.user = user
         self.password = password
-        opener = urllib2.build_opener(HelpSpotHandler())
+        opener = urllib2.build_opener(HelpSpotHandler(debuglevel=debuglevel))
         urllib2.install_opener(opener)
 
     def __getattr__(self, key):

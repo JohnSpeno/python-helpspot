@@ -1,11 +1,11 @@
 """
 Python HelpSpot interface
 
-A bare shell of a HelpSpot API.
+A semi-bare shell of a HelpSpot API.
 
 John P. Speno
 speno@macspeno.com
-Copyright 2009
+Copyright 2010
 
 Inspired by Python Twitter Tools
 http://mike.verdone.ca/twitter/
@@ -51,16 +51,50 @@ _POST_METHODS = [
     'private.request.merge',
 ]
 
+class HelpSpotError(Exception):
+    """
+    Exception raised when HelpSpot returns HTTP status code 400.
+    The instance varibles are as follows:
+
+        err_mesg - Description of the Error from HelpSpot.
+        err_id - Error ID of the Error from HelpSpot. 
+
+    This does not handle the error cose if either public or private API not
+
+    """
+    def __init__(self, err_mesg='', err_id=0):
+        self.err_mesg = err_mesg
+        self.err_id = err_id
+
+    def __str__(self):
+        return '%s (%s)' % (self.err_mesg, self.err_id)
+    
 class HelpSpotHandler(urllib2.HTTPHandler):
     """
-    urllib2 opener that treats HTTP status code 400
-    as normal. HelpSpot uses code 400 for API errors.
+    urllib2 opener class that handles (most) HelpSpot API errors.
+    HelpSpot returns HTTP status code 400 for (most) errors.
     """
     def http_error_400(self, req, fp, code, msg, hdrs):
-        return fp
+        errs = json.loads(fp.read())
+        try:
+            details = errs['error'][0]
+            err_mesg = details['description']
+            err_id = details['id']
+        except IndexError:
+            err_mesg = 'Unknown HelpSpot API error'
+            err_id = 0
+        raise HelpSpotError(err_mesg=err_mesg, err_id=err_id)
 
 class HelpSpotAPI:
+    """
+    A HelpSpot API call. Will implicitly raise HelpSpotError
+    on API errors otherwise it will return the unmarshalled
+    json ouput from HelpSpot.
+    """
     def __init__(self, method, user, password, uri):
+        """
+        Creates a HelpSpotAPI for a given method.
+        """
         self.method = method.replace('_', '.')
         self.user = user
         self.password = password
@@ -73,6 +107,9 @@ class HelpSpotAPI:
             self.action = 'GET'
         
     def __call__(self, **kwargs):
+        """
+        Calls the remote HelpSpot method on the HelpSpot server.
+        """
         uri = '%s%s' % (self.uri, self.method)
         params = urlencode(kwargs)
         if 'GET' == self.action:
@@ -88,12 +125,16 @@ class HelpSpotAPI:
         #req.add_header('Connection', 'close')
         if self.method.startswith('private.'):
             req.add_header('Authorization', 'Basic %s' % self.authz) 
+        # urllib2.urlopen could raise URLError, or HelpSpotError
         r = urllib2.urlopen(req, data)
         # XXX Detect errors when API not enabled
-        # XXX Detect other errors
         return json.loads(r.read())
 
 class HelpSpot:
+    """
+    A wrapper object around the HelpSpotAPI. Any method call on this
+    object will create and invoke a HelpSpotAPI object.
+    """
     def __init__(self, uri, user, password, debuglevel=0):
         self.uri = uri
         self.user = user
@@ -119,15 +160,6 @@ def main():
     print "private.version returned", ver2
     assert ver1 == ver2
 
-    err1 = hs.move_along()
-    print "unknown method move.along returned", err1
-
-    err2 = hs.private_request_update(xRequest='466', Custom28='Foobar')
-    print "bad request ID update returned", err2
-
-    good = hs.private_request_update(xRequest='20466', Custom28='Python')
-
-    print good['xRequest'], "was updated just fine"
 if __name__ == '__main__':
     import sys
     sys.exit(main())

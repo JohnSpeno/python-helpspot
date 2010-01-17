@@ -59,7 +59,8 @@ class HelpSpotError(Exception):
         err_mesg - Description of the Error from HelpSpot.
         err_id - Error ID of the Error from HelpSpot. 
 
-    This does not handle the error cose if either public or private API not
+    This does not handle the error cose if either public or private API
+    are not enabled.
 
     """
     def __init__(self, err_mesg='', err_id=0):

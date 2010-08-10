@@ -116,9 +116,9 @@ class HelpSpotAPI:
         if 'GET' == self.action:
             if params:
                 uri = '%s&%s' % (uri, params)
-            data = None
+            message_body = None
         else:
-            data = params
+            message_body = params
         uri = '%s&output=json' % uri
         req = urllib2.Request(uri)
         # Older Python versions may want to uncomment the following line
@@ -127,7 +127,7 @@ class HelpSpotAPI:
         if self.method.startswith('private.'):
             req.add_header('Authorization', 'Basic %s' % self.authz) 
         # urllib2.urlopen could raise URLError, or HelpSpotError
-        r = urllib2.urlopen(req, data)
+        r = urllib2.urlopen(req, message_body)
         # XXX Detect errors when API not enabled
         return json.loads(r.read())
 

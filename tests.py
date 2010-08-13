@@ -17,6 +17,12 @@ class TestHelpSpot(unittest.TestCase):
         b = self.hs.private_version()
         self.assertEqual(a, b)
 
+    def test_get_with_param(self):
+        a = self.hs.private_filter_get(xFilter=1)
+
+    def test_unknown_method(self):
+        self.assertRaises(helpspot.HelpSpotError, self.hs.private_wuggienorple)
+
 if __name__ == '__main__':
     import sys
     user = sys.argv[1]
@@ -25,5 +31,7 @@ if __name__ == '__main__':
 
     suite = unittest.TestSuite()
     suite.addTest(TestHelpSpot("test_version", path, user, pword))
+    suite.addTest(TestHelpSpot("test_get_with_param", path, user, pword))
+    suite.addTest(TestHelpSpot("test_unknown_method", path, user, pword))
 
     unittest.TextTestRunner().run(suite)

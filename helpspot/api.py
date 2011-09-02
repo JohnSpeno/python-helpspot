@@ -49,6 +49,7 @@ _POST_METHODS = [
     'private.request.addTimeEvent',
     'private.request.deleteTimeEvent',
     'private.request.merge',
+    'private.request.unsubscribe',
 ]
 
 class HelpSpotError(Exception):

@@ -77,11 +77,15 @@ class HelpSpotHandler(urllib2.HTTPHandler):
     HelpSpot returns HTTP status code 400 for (most) errors.
     """
     def http_error_400(self, req, fp, code, msg, hdrs):
-        errs = json.loads(fp.read())
+    	response = fp.read()
         try:
+            errs = json.loads(response)
             details = errs['error'][0]
             err_mesg = details['description']
             err_id = details['id']
+        except ValueError:
+            err_id = 0
+            err_mesg = "%s %s" % (msg, response)
         except IndexError:
             err_mesg = 'Unknown HelpSpot API error'
             err_id = 0

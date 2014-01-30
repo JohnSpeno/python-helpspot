@@ -33,6 +33,7 @@ hs.private_request_update(xRequest='12345', Custom28='90210')
 """
 
 import urllib2
+import base64
 from urllib import urlencode
 try:
     import json
@@ -77,11 +78,15 @@ class HelpSpotHandler(urllib2.HTTPHandler):
     HelpSpot returns HTTP status code 400 for (most) errors.
     """
     def http_error_400(self, req, fp, code, msg, hdrs):
-        errs = json.loads(fp.read())
+    	response = fp.read()
         try:
+            errs = json.loads(response)
             details = errs['error'][0]
             err_mesg = details['description']
             err_id = details['id']
+        except ValueError:
+            err_id = 0
+            err_mesg = "%s %s" % (msg, response)
         except IndexError:
             err_mesg = 'Unknown HelpSpot API error'
             err_id = 0
@@ -101,7 +106,7 @@ class HelpSpotAPI:
         self.user = user
         self.password = password
         s = '%s:%s' % (self.user, self.password)
-        self.authz = s.encode('base64').rstrip()
+        self.authz = base64.b64encode(s)
         self.uri = uri.rstrip('/') + '/api/index.php?method='
         if self.method in _POST_METHODS:
             self.action = 'POST'
